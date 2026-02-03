@@ -486,7 +486,7 @@
       <!-- Info -->
       <div class="reel-info">
         <div class="username">
-          <span>@creator_studio</span>
+          <span>@badshah</span>
           <span class="follow-btn" id="followBtn">Follow</span>
         </div>
         <div class="description">
@@ -513,7 +513,7 @@
           <div class="icon-circle">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </div>
-          <span class="action-label">3.1K</span>
+          <span class="action-label"></span>
         </div>
         <div class="action-btn" id="shareBtn" onclick="shareAnim()">
           <div class="icon-circle">
@@ -609,7 +609,7 @@
     const btn = document.getElementById('likeBtn');
     btn.classList.toggle('liked', liked);
     const label = btn.querySelector('.action-label');
-    label.textContent = liked ? '48.3K' : '48.2K';
+    label.textContent = liked ? '' : '';
   };
 
   // ── Double-tap heart (on the card, not overlay) ──
