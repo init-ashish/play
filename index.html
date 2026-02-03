@@ -467,12 +467,7 @@
     <!-- ACTIVE reel (your video) -->
     <div class="reel-card active" id="reel-active">
       <div class="video-wrap">
-<iframe 
-  src="https://drive.google.com/file/d/16SICQkQCRTg3HFgdOG7lYKQviOnFfIrt/preview?autoplay=1&mute=1" 
-  frameborder="0" 
-  allow="autoplay; encrypted-media; picture-in-picture" 
-  allowfullscreen>
-</iframe>
+        <iframe src="https://drive.google.com/file/d/16SICQkQCRTg3HFgdOG7lYKQviOnFfIrt/preview" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
       </div>
       <div class="gradient-top"></div>
       <div class="gradient-bottom"></div>
@@ -578,49 +573,6 @@
 </div>
 
 <!-- ─── SCRIPTS ─── -->
-  <script>
-    // Autoplay the Google Drive video on load
-window.addEventListener('load', () => {
-  // Give the iframe a tiny bit of time to load its content
-  setTimeout(() => {
-    const iframe = document.querySelector('#reel-active iframe');
-    if (!iframe) return;
-
-    try {
-      // Access the document inside the iframe
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      
-      // Find the <video> element inside Drive preview
-      const video = iframeDoc.querySelector('video');
-      
-      if (video) {
-        // Mute is often required for autoplay in most browsers
-        video.muted = true;
-        video.playsInline = true;  // important for mobile
-        
-        const playPromise = video.play();
-        
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              console.log("Video autoplay started");
-              // Optional: unmute after first play if you want sound
-              // video.muted = false;
-            })
-            .catch(err => {
-              console.log("Autoplay prevented:", err);
-              // Browser blocked autoplay → user will need to tap
-            });
-        }
-      } else {
-        console.log("No video element found in iframe");
-      }
-    } catch (e) {
-      console.log("Cannot access iframe content (likely cross-origin)", e);
-    }
-  }, 1500); // 1.5 seconds delay — adjust if needed (Drive iframe can be slow)
-});
-  </script>
 <script>
 (function(){
   // ── Clock ──
