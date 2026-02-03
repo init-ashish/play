@@ -172,7 +172,7 @@
     width: 100%;
     height: 100%;
     border: none;
-    z-index: 3; /* above gradients (z2), below actions (z10) */
+    z-index: 3;
   }
 
   /* dark gradient overlays for text legibility */
@@ -197,9 +197,9 @@
   .tap-overlay {
     position: absolute;
     inset: 0;
-    z-index: 1; /* behind iframe (z5) so video is clickable */
+    z-index: 1;
     cursor: pointer;
-    pointer-events: none; /* disabled — we detect double-tap on the card */
+    pointer-events: none;
   }
   .play-indicator {
     position: absolute;
@@ -467,7 +467,13 @@
     <!-- ACTIVE reel (your video) -->
     <div class="reel-card active" id="reel-active">
       <div class="video-wrap">
-        <iframe src="https://drive.google.com/file/d/16SICQkQCRTg3HFgdOG7lYKQviOnFfIrt/preview" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        <!-- autoplay=1 added to URL + muted attribute so browser allows autoplay -->
+        <iframe
+          src="https://drive.google.com/file/d/16SICQkQCRTg3HFgdOG7lYKQviOnFfIrt/preview?autoplay=1"
+          frameborder="0"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowfullscreen
+          muted></iframe>
       </div>
       <div class="gradient-top"></div>
       <div class="gradient-bottom"></div>
@@ -507,7 +513,7 @@
           <div class="icon-circle">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           </div>
-          <span class="action-label">48.2K</span>
+          <span class="action-label"></span>
         </div>
         <div class="action-btn" onclick="pulse(this)">
           <div class="icon-circle">
@@ -655,7 +661,6 @@
     startY = y;
     dragging = true;
     startTime = Date.now();
-    // kill transitions while dragging
     [prev, active, next].forEach(c => c.style.transition = 'none');
   }
   function onMove(y){
@@ -673,23 +678,19 @@
     const isFling = Math.abs(dy) > 40 && elapsed < 300;
     const threshold = 80;
 
-    // restore transitions
     [prev, active, next].forEach(c => c.style.transition = '');
 
     if(dy < -threshold || (dy < -30 && isFling)){
-      // swipe up → show next
       prev.style.transform  = 'translateY(-200%)';
       active.style.transform= 'translateY(-100%)';
       next.style.transform  = 'translateY(0)';
       setTimeout(resetCards, 360);
     } else if(dy > threshold || (dy > 30 && isFling)){
-      // swipe down → show prev
       prev.style.transform  = 'translateY(0)';
       active.style.transform= 'translateY(100%)';
       next.style.transform  = 'translateY(200%)';
       setTimeout(resetCards, 360);
     } else {
-      // snap back
       prev.style.transform  = 'translateY(-100%)';
       active.style.transform= 'translateY(0)';
       next.style.transform  = 'translateY(100%)';
@@ -700,7 +701,6 @@
     prev.style.transform   = 'translateY(-100%)';
     active.style.transform = 'translateY(0)';
     next.style.transform   = 'translateY(100%)';
-    // force reflow
     void active.offsetHeight;
     [prev, active, next].forEach(c => c.style.transition = '');
   }
