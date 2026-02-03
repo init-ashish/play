@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>Reels</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=SF+Pro:wght@400;500;600;700&display=swap');
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  :root {
+    --white: #ffffff;
+    --black: #000000;
+    --gray: rgba(255,255,255,0.6);
+    --gray-dim: rgba(255,255,255,0.35);
+    --accent: #e8485f;
+    --accent-glow: rgba(232, 72, 95, 0.4);
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--black);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--white);
+  }
+
+  /* ─── PHONE SHELL ─── */
+  .phone-shell {
+    position: relative;
+    width: 393px;
+    height: 852px;
+    margin: 0 auto;
+    background: var(--black);
+    overflow: hidden;
+    border-radius: 55px;
+    box-shadow:
+      0 0 0 12px #1a1a1a,
+      0 0 0 14px #2a2a2a,
+      0 30px 80px rgba(0,0,0,0.7);
+  }
+
+  /* center phone vertically */
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #0a0a0a;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(232,72,95,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(60,60,180,0.06) 0%, transparent 50%);
+  }
+
+  /* ─── STATUS BAR ─── */
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 54px;
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    pointer-events: none;
+  }
+  .status-bar .time { letter-spacing: -0.3px; }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+  .status-icons svg { width: 18px; height: 12px; }
+
+  /* ─── DYNAMIC ISLAND ─── */
+  .dynamic-island {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 126px;
+    height: 36px;
+    background: var(--black);
+    border-radius: 20px;
+    z-index: 101;
+  }
+
+  /* ─── TOP NAV ─── */
+  .top-nav {
+    position: absolute;
+    top: 54px; left: 0; right: 0;
+    height: 44px;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 100%);
+  }
+  .nav-tab {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--gray);
+    cursor: pointer;
+    transition: color 0.25s;
+    position: relative;
+    padding-bottom: 4px;
+  }
+  .nav-tab.active {
+    color: var(--white);
+    font-weight: 700;
+  }
+  .nav-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 50%;
+    transform: translateX(-50%);
+    width: 22px; height: 3px;
+    background: var(--white);
+    border-radius: 2px;
+  }
+  .search-icon {
+    position: absolute;
+    right: 20px;
+    top: 54px;
+    width: 44px; height: 44px;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  /* ─── REELS VIEWPORT ─── */
+  .reels-viewport {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  /* ─── SINGLE REEL CARD ─── */
+  .reel-card {
+    position: absolute;
+    inset: 0;
+    background: var(--black);
+    transition: transform 0.35s cubic-bezier(.22,.68,0,1.2);
+    will-change: transform;
+  }
+  .reel-card.prev  { transform: translateY(-100%); }
+  .reel-card.next  { transform: translateY(100%); }
+  .reel-card.active { transform: translateY(0); }
+
+  /* video fill */
+  .reel-card .video-wrap {
+    position: absolute;
+    inset: 0;
+    background: var(--black);
+    overflow: hidden;
+  }
+  .reel-card .video-wrap iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    border: none;
+    z-index: 3; /* above gradients (z2), below actions (z10) */
+  }
+
+  /* dark gradient overlays for text legibility */
+  .reel-card .gradient-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 180px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, transparent 100%);
+    z-index: 4;
+    pointer-events: none;
+  }
+  .reel-card .gradient-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 320px;
+    background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  /* ─── TAP OVERLAY (play / pause) ─── */
+  .tap-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1; /* behind iframe (z5) so video is clickable */
+    cursor: pointer;
+    pointer-events: none; /* disabled — we detect double-tap on the card */
+  }
+  .play-indicator {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 72px; height: 72px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease-out;
+    pointer-events: none;
+    z-index: 6;
+  }
+  .play-indicator.show { transform: translate(-50%, -50%) scale(1); }
+  .play-indicator svg { width: 30px; height: 30px; fill: var(--white); }
+
+  /* ─── BOTTOM INFO ─── */
+  .reel-info {
+    position: absolute;
+    bottom: 100px;
+    left: 0; right: 60px;
+    z-index: 10;
+    padding: 0 20px;
+    pointer-events: none;
+  }
+  .reel-info .username {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .reel-info .username .follow-btn {
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid var(--white);
+    border-radius: 5px;
+    padding: 2px 10px;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .reel-info .username .follow-btn:hover {
+    background: var(--white);
+    color: var(--black);
+  }
+  .reel-info .description {
+    font-size: 14px;
+    color: rgba(255,255,255,0.9);
+    line-height: 1.4;
+    max-width: 280px;
+  }
+  .reel-info .description .hashtag { color: #7ec8e3; }
+  .reel-info .music-bar {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+  }
+  .reel-info .music-bar .music-note {
+    width: 28px; height: 28px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    animation: spin 3s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── RIGHT SIDE ACTIONS ─── */
+  .side-actions {
+    position: absolute;
+    right: 14px;
+    bottom: 100px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+  .action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .action-btn .icon-circle {
+    width: 46px; height: 46px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(6px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .action-btn:active .icon-circle {
+    transform: scale(0.88);
+    background: rgba(255,255,255,0.22);
+  }
+  .action-btn .icon-circle svg { width: 22px; height: 22px; }
+  .action-btn .action-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray);
+  }
+  .action-btn.liked .icon-circle { background: var(--accent-glow); }
+  .action-btn.liked .icon-circle svg { fill: var(--accent); stroke: var(--accent); }
+  .action-btn.liked .action-label { color: var(--accent); }
+
+  /* share spin animation */
+  .action-btn.shared .icon-circle { animation: shareClick 0.4s ease; }
+  @keyframes shareClick {
+    0%   { transform: scale(1) rotate(0deg); }
+    50%  { transform: scale(0.8) rotate(-15deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  /* ─── BOTTOM TAB BAR ─── */
+  .tab-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 96px;
+    z-index: 90;
+    background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    padding-top: 14px;
+  }
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+  .tab-item.active { opacity: 1; }
+  .tab-item svg { width: 24px; height: 24px; }
+  .tab-item span { font-size: 10px; font-weight: 600; }
+  .tab-item.plus-btn {
+    opacity: 1;
+  }
+  .tab-item.plus-btn .plus-circle {
+    width: 44px; height: 44px;
+    border: 2.5px solid var(--white);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tab-item.plus-btn .plus-circle svg { width: 22px; height: 22px; }
+
+  /* ─── HOME INDICATOR ─── */
+  .home-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 134px; height: 5px;
+    background: var(--white);
+    border-radius: 3px;
+    z-index: 100;
+    opacity: 0.9;
+  }
+
+  /* ─── SWIPE HINT ─── */
+  .swipe-hint {
+    position: absolute;
+    bottom: 108px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    animation: hintFade 3s ease forwards 2s;
+    opacity: 1;
+    pointer-events: none;
+  }
+  .swipe-hint svg { width: 20px; height: 20px; fill: var(--white); opacity: 0.7; }
+  .swipe-hint span { font-size: 11px; color: var(--gray); font-weight: 500; }
+  @keyframes hintFade { to { opacity: 0; } }
+
+  /* ─── DOUBLE TAP HEART ─── */
+  .heart-burst {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 90px; height: 90px;
+    z-index: 20;
+    pointer-events: none;
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .heart-burst.show { transform: translate(-50%, -50%) scale(1); }
+  .heart-burst svg { width: 100%; height: 100%; fill: var(--white); filter: drop-shadow(0 0 12px rgba(255,255,255,0.6)); }
+
+  /* ─── FAKE REELS (colored placeholders for prev/next) ─── */
+  .fake-reel-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+  }
+
+  /* ─── RESPONSIVE: if screen < phone size, scale down ─── */
+  @media (max-width: 430px) {
+    .phone-shell {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    body { align-items: flex-start; justify-content: flex-start; min-height: 100vh; background: var(--black); }
+    .dynamic-island { display: none; }
+    .status-bar { top: 0; padding-top: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-shell">
+
+  <!-- Dynamic Island -->
+  <div class="dynamic-island"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="time" id="clock">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 18 12" fill="white"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13.5" y="1" width="3" height="11" rx="1" opacity="0.3"/></svg>
+      <svg viewBox="0 0 16 12" fill="white"><path d="M8 2.5C5.5 2.5 3.3 3.5 1.8 5.2L0 3.4C2 1.2 4.8 0 8 0s6 1.2 8 3.4L14.2 5.2C12.7 3.5 10.5 2.5 8 2.5zm0 4c-1.5 0-2.8.6-3.8 1.5L2.4 6.2C3.8 4.8 5.8 4 8 4s4.2.8 5.6 2.2L11.8 8c-1-.9-2.3-1.5-3.8-1.5zm0 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></svg>
+      <svg viewBox="0 0 28 13" fill="white"><rect x="0" y="1" width="22" height="11" rx="3" stroke="white" stroke-width="1.5" fill="none"/><rect x="1.5" y="2.5" width="16" height="8" rx="1.5" fill="white"/><rect x="23" y="4" width="2" height="5" rx="1" fill="white" opacity="0.4"/></svg>
+    </div>
+  </div>
+
+  <!-- Top Nav -->
+  <div class="top-nav">
+    <div class="nav-tab" onclick="switchTab(this,'following')">Following</div>
+    <div class="nav-tab active" onclick="switchTab(this,'foryou')">For You</div>
+  </div>
+  <div class="search-icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7"/><line x1="16" y1="16" x2="21" y2="21"/></svg>
+  </div>
+
+  <!-- Reels Viewport -->
+  <div class="reels-viewport" id="reelsViewport">
+
+    <!-- PREV reel (placeholder) -->
+    <div class="reel-card prev" id="reel-prev">
+      <div class="fake-reel-bg" style="background: linear-gradient(135deg,#1a1a2e,#16213e);">PREV REEL</div>
+    </div>
+
+    <!-- ACTIVE reel (your video) -->
+    <div class="reel-card active" id="reel-active">
+      <div class="video-wrap">
+        <iframe src="https://drive.google.com/file/d/16SICQkQCRTg3HFgdOG7lYKQviOnFfIrt/preview" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div class="gradient-top"></div>
+      <div class="gradient-bottom"></div>
+
+      <!-- Tap overlay -->
+      <div class="tap-overlay" id="tapOverlay"></div>
+      <div class="play-indicator" id="playIndicator">
+        <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+      </div>
+
+      <!-- Double-tap heart -->
+      <div class="heart-burst" id="heartBurst">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </div>
+
+      <!-- Info -->
+      <div class="reel-info">
+        <div class="username">
+          <span>@creator_studio</span>
+          <span class="follow-btn" id="followBtn">Follow</span>
+        </div>
+        <div class="description">
+          Check out this amazing video 🔥<br>
+          <span class="hashtag">#viral</span> <span class="hashtag">#trending</span> <span class="hashtag">#reels</span>
+        </div>
+        <div class="music-bar">
+          <div class="music-note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </div>
+          <span>Original Audio – creator_studio</span>
+        </div>
+      </div>
+
+      <!-- Side Actions -->
+      <div class="side-actions">
+        <div class="action-btn" id="likeBtn" onclick="toggleLike()">
+          <div class="icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <span class="action-label">48.2K</span>
+        </div>
+        <div class="action-btn" onclick="pulse(this)">
+          <div class="icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <span class="action-label">3.1K</span>
+        </div>
+        <div class="action-btn" id="shareBtn" onclick="shareAnim()">
+          <div class="icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </div>
+          <span class="action-label">Share</span>
+        </div>
+        <div class="action-btn" onclick="pulse(this)">
+          <div class="icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="5" r="1.2" fill="white"/><circle cx="12" cy="12" r="1.2" fill="white"/><circle cx="12" cy="19" r="1.2" fill="white"/></svg>
+          </div>
+          <span class="action-label"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEXT reel (placeholder) -->
+    <div class="reel-card next" id="reel-next">
+      <div class="fake-reel-bg" style="background: linear-gradient(135deg,#0f3460,#533483);">NEXT REEL</div>
+    </div>
+
+  </div>
+
+  <!-- Swipe Hint -->
+  <div class="swipe-hint" id="swipeHint">
+    <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+    <span>Swipe to next reel</span>
+  </div>
+
+  <!-- Bottom Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-item active">
+      <svg viewBox="0 0 24 24" fill="white"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span>Home</span>
+    </div>
+    <div class="tab-item" style="opacity:0.45;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Search</span>
+    </div>
+    <div class="tab-item plus-btn">
+      <div class="plus-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+    </div>
+    <div class="tab-item" style="opacity:0.45;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Social</span>
+    </div>
+    <div class="tab-item" style="opacity:0.45;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </div>
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator"></div>
+</div>
+
+<!-- ─── SCRIPTS ─── -->
+<script>
+(function(){
+  // ── Clock ──
+  function updateClock(){
+    const d = new Date();
+    document.getElementById('clock').textContent =
+      d.getHours().toString().padStart(2,'0') + ':' +
+      d.getMinutes().toString().padStart(2,'0');
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // ── Nav tabs ──
+  window.switchTab = function(el, tab){
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  };
+
+  // ── Follow button ──
+  const followBtn = document.getElementById('followBtn');
+  let following = false;
+  followBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    following = !following;
+    followBtn.textContent = following ? 'Following ✓' : 'Follow';
+    followBtn.style.background = following ? 'var(--white)' : '';
+    followBtn.style.color = following ? 'var(--black)' : '';
+  });
+
+  // ── Like ──
+  let liked = false;
+  window.toggleLike = function(){
+    liked = !liked;
+    const btn = document.getElementById('likeBtn');
+    btn.classList.toggle('liked', liked);
+    const label = btn.querySelector('.action-label');
+    label.textContent = liked ? '48.3K' : '48.2K';
+  };
+
+  // ── Double-tap heart (on the card, not overlay) ──
+  let lastTap = 0;
+  document.getElementById('reel-active').addEventListener('click', function(e){
+    const now = Date.now();
+    if(now - lastTap < 400){
+      showHeart();
+      if(!liked) window.toggleLike();
+    }
+    lastTap = now;
+  });
+
+  function showHeart(){
+    const h = document.getElementById('heartBurst');
+    h.classList.add('show');
+    setTimeout(()=> h.classList.remove('show'), 700);
+  }
+
+  // ── Share animation ──
+  window.shareAnim = function(){
+    const btn = document.getElementById('shareBtn');
+    btn.classList.add('shared');
+    setTimeout(()=> btn.classList.remove('shared'), 500);
+  };
+
+  // ── Generic pulse ──
+  window.pulse = function(el){
+    const ic = el.querySelector('.icon-circle');
+    ic.style.transition = 'transform 0.15s';
+    ic.style.transform = 'scale(0.85)';
+    setTimeout(()=>{ ic.style.transform = 'scale(1)'; }, 150);
+  };
+
+  // ── Swipe / Drag gesture on reels ──
+  const viewport = document.getElementById('reelsViewport');
+  const prev  = document.getElementById('reel-prev');
+  const active= document.getElementById('reel-active');
+  const next  = document.getElementById('reel-next');
+  let startY = 0, dragging = false, startTime = 0;
+
+  function onStart(y){
+    startY = y;
+    dragging = true;
+    startTime = Date.now();
+    // kill transitions while dragging
+    [prev, active, next].forEach(c => c.style.transition = 'none');
+  }
+  function onMove(y){
+    if(!dragging) return;
+    const dy = y - startY;
+    prev.style.transform  = `translateY(calc(-100% + ${dy}px))`;
+    active.style.transform= `translateY(${dy}px)`;
+    next.style.transform  = `translateY(calc(100% + ${dy}px))`;
+  }
+  function onEnd(y){
+    if(!dragging) return;
+    dragging = false;
+    const dy = y - startY;
+    const elapsed = Date.now() - startTime;
+    const isFling = Math.abs(dy) > 40 && elapsed < 300;
+    const threshold = 80;
+
+    // restore transitions
+    [prev, active, next].forEach(c => c.style.transition = '');
+
+    if(dy < -threshold || (dy < -30 && isFling)){
+      // swipe up → show next
+      prev.style.transform  = 'translateY(-200%)';
+      active.style.transform= 'translateY(-100%)';
+      next.style.transform  = 'translateY(0)';
+      setTimeout(resetCards, 360);
+    } else if(dy > threshold || (dy > 30 && isFling)){
+      // swipe down → show prev
+      prev.style.transform  = 'translateY(0)';
+      active.style.transform= 'translateY(100%)';
+      next.style.transform  = 'translateY(200%)';
+      setTimeout(resetCards, 360);
+    } else {
+      // snap back
+      prev.style.transform  = 'translateY(-100%)';
+      active.style.transform= 'translateY(0)';
+      next.style.transform  = 'translateY(100%)';
+    }
+  }
+  function resetCards(){
+    [prev, active, next].forEach(c => c.style.transition = 'none');
+    prev.style.transform   = 'translateY(-100%)';
+    active.style.transform = 'translateY(0)';
+    next.style.transform   = 'translateY(100%)';
+    // force reflow
+    void active.offsetHeight;
+    [prev, active, next].forEach(c => c.style.transition = '');
+  }
+
+  // Touch
+  viewport.addEventListener('touchstart', e => onStart(e.touches[0].clientY), {passive:true});
+  viewport.addEventListener('touchmove',  e => { e.preventDefault(); onMove(e.touches[0].clientY); }, {passive:false});
+  viewport.addEventListener('touchend',   e => onEnd(e.changedTouches[0].clientY));
+
+  // Mouse (desktop preview)
+  let mouseDown = false;
+  viewport.addEventListener('mousedown', e => { mouseDown=true; onStart(e.clientY); });
+  viewport.addEventListener('mousemove', e => { if(mouseDown) onMove(e.clientY); });
+  viewport.addEventListener('mouseup',   e => { if(mouseDown){ mouseDown=false; onEnd(e.clientY); } });
+  viewport.addEventListener('mouseleave',e => { if(mouseDown){ mouseDown=false; onEnd(e.clientY); } });
+
+})();
+</script>
+</body>
+</html>
